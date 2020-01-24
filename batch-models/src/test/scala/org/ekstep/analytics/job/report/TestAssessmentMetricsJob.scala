@@ -4,15 +4,14 @@ import java.io.File
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.ekstep.analytics.framework.FrameworkContext
+import org.ekstep.analytics.util.ESUtil.elasticSearchURL
 import org.ekstep.analytics.framework.util.RestUtil
 import org.ekstep.analytics.job.report.{AssessmentMetricsJob, BaseReportSpec, ReportGenerator}
-import org.ekstep.analytics.util.ESUtil.elasticSearchURL
 import org.ekstep.analytics.util.{ESUtil, EmbeddedES, EsResponse, FileUtil}
 import org.scalamock.scalatest.MockFactory
 import org.sunbird.cloud.storage.BaseStorageService
 import org.sunbird.cloud.storage.conf.AppConf
 
-import scala.collection.Map
 import scala.collection.mutable.Buffer
 
 class TestAssessmentMetricsJob extends BaseReportSpec with MockFactory {
@@ -120,15 +119,15 @@ class TestAssessmentMetricsJob extends BaseReportSpec with MockFactory {
     ))
   }
 
-  "AssessmentMetricsJob" should "define all the configurations" in {
-    assert(AppConf.getConfig("assessment.metrics.bestscore.report").isEmpty === false)
-    assert(AppConf.getConfig("assessment.metrics.content.index").isEmpty === false)
-    assert(AppConf.getConfig("assessment.metrics.cassandra.input.consistency").isEmpty === false)
-    assert(AppConf.getConfig("assessment.metrics.cloud.objectKey").isEmpty === false)
-    assert(AppConf.getConfig("cloud.container.reports").isEmpty === false)
-    assert(AppConf.getConfig("assessment.metrics.temp.dir").isEmpty === false)
-    assert(AppConf.getConfig("course.upload.reports.enabled").isEmpty === false)
-    assert(AppConf.getConfig("course.es.index.enabled").isEmpty === false)
+  it should "AssessmentMetricsJob define all the configurations" in {
+    AppConf.getConfig("assessment.metrics.bestscore.report").isEmpty should be(false)
+    AppConf.getConfig("assessment.metrics.content.index").isEmpty should be(false)
+    AppConf.getConfig("assessment.metrics.cassandra.input.consistency").isEmpty should be(false)
+    AppConf.getConfig("assessment.metrics.cloud.objectKey").isEmpty should be(false)
+    AppConf.getConfig("cloud.container.reports").isEmpty should be(false)
+    AppConf.getConfig("assessment.metrics.temp.dir").isEmpty should be(false)
+    AppConf.getConfig("course.upload.reports.enabled").isEmpty should be(false)
+    AppConf.getConfig("course.es.index.enabled").isEmpty should be(false)
   }
 
   it should "Ensure for the user `user030` should have all proper records values" in {
@@ -172,25 +171,25 @@ class TestAssessmentMetricsJob extends BaseReportSpec with MockFactory {
     val content1_DF = spark.sql("select * from report_df where userid ='user030' and content_name = 'My content 1' ")
 
     val username = content1_DF.select("username").collect().map(_ (0)).toList
-    assert(username(0) === "Karishma Kapoor")
+    username.head should be("Karishma Kapoor")
 
     val total_score_value = content1_DF.select("total_sum_score").collect().map(_ (0)).toList
-    assert(total_score_value(0) === "10.0/20.0")
+    total_score_value.head should be("10.0/20.0")
 
     val courseid_value = content1_DF.select("courseid").collect().map(_ (0)).toList
-    assert(courseid_value(0) === "do_1125559882615357441175")
+    courseid_value.head should be("do_1125559882615357441175")
 
     val batchid_value = content1_DF.select("batchid").collect().map(_ (0)).toList
-    assert(batchid_value(0) === "1010")
+    batchid_value.head should be("1010")
 
     val district_name = content1_DF.select("district_name").collect().map(_ (0)).toList
-    assert(district_name(0) === "GULBARGA")
+    district_name.head should be("GULBARGA")
 
     val org_name = content1_DF.select("orgname_resolved").collect().map(_ (0)).toList
-    assert(org_name(0) === "SACRED HEART(B)PS,TIRUVARANGAM")
+    org_name.head should be("SACRED HEART(B)PS,TIRUVARANGAM")
 
     val schoolname = content1_DF.select("schoolname_resolved").collect().map(_ (0)).toList
-    assert(schoolname(0) === "RAILWAY MIXED HIGH SCHOOL, ARAKKONAM VELLORE")
+    schoolname.head should be("RAILWAY MIXED HIGH SCHOOL, ARAKKONAM VELLORE")
 
 
   }
@@ -202,7 +201,7 @@ class TestAssessmentMetricsJob extends BaseReportSpec with MockFactory {
     )).toDF("content_id", "attempt_id", "user_id", "course_id", "batch_id", "created_on", "last_attempted_on", "total_max_score", "total_score", "updated_on", "grand_total", "question")
     val bestScoreDF = AssessmentMetricsJob.getAssessmentData(df);
     val bestScore = bestScoreDF.select("total_score").collect().map(_ (0)).toList
-    assert(bestScore(0) === "5")
+    bestScore.head should be("5")
   }
 
   it should "Ensure CSV Report Should have all proper columns names" in {
@@ -245,15 +244,15 @@ class TestAssessmentMetricsJob extends BaseReportSpec with MockFactory {
     val finalReport = AssessmentMetricsJob.transposeDF(denormedDF)
     val column_names = finalReport.columns
     // Validate the column names are proper or not.
-    assert(column_names.contains("External ID") === true)
-    assert(column_names.contains("User ID") === true)
-    assert(column_names.contains("User Name") === true)
-    assert(column_names.contains("Email ID") === true)
-    assert(column_names.contains("Mobile Number") === true)
-    assert(column_names.contains("Organisation Name") === true)
-    assert(column_names.contains("District Name") === true)
-    assert(column_names.contains("School Name") === true)
-    assert(column_names.contains("Total Score") === true)
+    column_names.contains("External ID")should be(true)
+    column_names.contains("User ID")should be(true)
+    column_names.contains("User Name")should be(true)
+    column_names.contains("Email ID")should be(true)
+    column_names.contains("Mobile Number")should be(true)
+    column_names.contains("Organisation Name")should be(true)
+    column_names.contains("District Name")should be(true)
+    column_names.contains("School Name")should be(true)
+    column_names.contains("Total Score")should be(true)
   }
 
   it should "generate reports" in {
@@ -306,16 +305,16 @@ class TestAssessmentMetricsJob extends BaseReportSpec with MockFactory {
 
   it should "fetch the only self assess content names from the elastic search" in {
     val contentESIndex = AppConf.getConfig("assessment.metrics.content.index")
-    assert(contentESIndex.isEmpty === false)
+    contentESIndex.isEmpty should be(false)
     val contentList = List("do_112835335135993856149", "do_112835336280596480151", "do_112832394979106816114")
     val contentDF = ESUtil.getAssessmentNames(spark, contentList, AppConf.getConfig("assessment.metrics.content.index"), AppConf.getConfig("assessment.metrics.supported.contenttype"))
     contentDF.createOrReplaceTempView("content_metadata")
     val content_id_df = spark.sql("select * from content_metadata where identifier ='do_112835335135993856149'")
     val content_name = content_id_df.select("name").collect().map(_ (0)).toList
     val content_id = content_id_df.select("identifier").collect().map(_ (0)).toList
-    assert(content_name(0) === "My content 1")
-    assert(content_id(0) === "do_112835335135993856149")
-    assert(contentDF.count() === 2) // Length should be 2, Since 2 contents are self assess and 1 content is resource
+    content_name.head should be("My content 1")
+    content_id.head should be("do_112835335135993856149")
+    contentDF.count() should be(2) // Length should be 2, Since 2 contents are self assess and 1 content is resource
   }
 
   it should "generate reports for the best score" in {
@@ -366,7 +365,7 @@ class TestAssessmentMetricsJob extends BaseReportSpec with MockFactory {
     reportDF.createOrReplaceTempView("best_attempt")
     val df = spark.sql("select * from best_attempt where batchid ='1010' and courseid='do_1125559882615357441175' and content_id='do_112835335135993856149' and userid ='user030'")
     val best_attempt_score = df.select("total_score").collect().map(_ (0)).toList
-    assert(best_attempt_score.head === "50")
+    best_attempt_score.head should be("50")
   }
 
   it should "Able to create a elastic search index" in {
@@ -379,15 +378,15 @@ class TestAssessmentMetricsJob extends BaseReportSpec with MockFactory {
     ESUtil.createIndex(esIndexName, "");
     ESUtil.removeIndexFromAlias(List(esIndexName), "cbatch-assessment")
     val esResponse: EsResponse = ESUtil.addIndexToAlias(esIndexName, "cbatch-assessment");
-    assert(esResponse.acknowledged === true)
+    esResponse.acknowledged should be(true)
   }
 
 
   it should "Remove all index from the alias" in {
     val esResponse: EsResponse = ESUtil.removeAllIndexFromAlias("cbatch-assessment");
-    assert(esResponse.acknowledged === true)
+    esResponse.acknowledged should be(true)
   }
-
+  //
   it should "not throw any error, Should create alias and index to save data into es" in {
     val df = spark.createDataFrame(Seq(
       ("user010", "Manju", "do_534985557934", "batch1", "10", "****@gmail.com", "*****75643", "Tumkur", "Orname", "", "NVPHS", "20", "Math", ""),
@@ -398,9 +397,9 @@ class TestAssessmentMetricsJob extends BaseReportSpec with MockFactory {
       AssessmentMetricsJob.saveToElastic(indexName, df);
       val requestURL = elasticSearchURL + "/" + indexName + "/_count?q=courseId:do_534985557934"
       val response = RestUtil.get[String](requestURL)
-      assert(response !== null)
+      response should not be null
     } catch {
-      case ex: Exception => assert(ex === null)
+      case ex: Exception => ex should be(null)
     }
   }
 
@@ -412,8 +411,8 @@ class TestAssessmentMetricsJob extends BaseReportSpec with MockFactory {
     //TODO : Sonar cloud testcase failing need to check
     try {
       FileUtil.renameReport(tempDir, renamedDir, "batch-001");
-//      assert(out.exists() === true)
-//      assert(temp.exists() === true)
+      //      assert(out.exists() === true)
+      //      assert(temp.exists() === true)
     } catch {
       case ex: Exception => println("Error" + ex)
     }
@@ -429,7 +428,7 @@ class TestAssessmentMetricsJob extends BaseReportSpec with MockFactory {
     try {
       FileUtil.renameReport(tempDir, renamedDir, "batch-001");
     } catch {
-      case ex: Exception => assert(ex === null)
+      case ex: Exception => ex should be(null)
     }
   }
 

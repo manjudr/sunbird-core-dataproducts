@@ -136,8 +136,8 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
     CourseMetricsJob.saveReportES(reportDF)
 
 
-    assert(reportDF.count == 34)
-    assert(reportDF.groupBy(col("batchid")).count().count() == 10)
+    reportDF.count should be(34)
+    reportDF.groupBy(col("batchid")).count().count() should be(10)
 
     val reportData = reportDF
       .groupBy(col("batchid"))
@@ -145,16 +145,16 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
       .collect()
 
 
-    assert(reportData.filter(row => row.getString(0) == "1001").head.getLong(1) == 2)
-    assert(reportData.filter(row => row.getString(0) == "1002").head.getLong(1) == 3)
-    assert(reportData.filter(row => row.getString(0) == "1003").head.getLong(1) == 4)
-    assert(reportData.filter(row => row.getString(0) == "1004").head.getLong(1) == 4)
-    assert(reportData.filter(row => row.getString(0) == "1005").head.getLong(1) == 4)
-    assert(reportData.filter(row => row.getString(0) == "1006").head.getLong(1) == 4)
-    assert(reportData.filter(row => row.getString(0) == "1007").head.getLong(1) == 4)
-    assert(reportData.filter(row => row.getString(0) == "1008").head.getLong(1) == 3)
-    assert(reportData.filter(row => row.getString(0) == "1009").head.getLong(1) == 3)
-    assert(reportData.filter(row => row.getString(0) == "1010").head.getLong(1) == 3)
+    reportData.filter(row => row.getString(0) == "1001").head.getLong(1) should be(2)
+    reportData.filter(row => row.getString(0) == "1002").head.getLong(1) should be(3)
+    reportData.filter(row => row.getString(0) == "1003").head.getLong(1) should be(4)
+    reportData.filter(row => row.getString(0) == "1004").head.getLong(1) should be(4)
+    reportData.filter(row => row.getString(0) == "1005").head.getLong(1) should be(4)
+    reportData.filter(row => row.getString(0) == "1006").head.getLong(1) should be(4)
+    reportData.filter(row => row.getString(0) == "1007").head.getLong(1) should be(4)
+    reportData.filter(row => row.getString(0) == "1008").head.getLong(1) should be(3)
+    reportData.filter(row => row.getString(0) == "1009").head.getLong(1) should be(3)
+    reportData.filter(row => row.getString(0) == "1010").head.getLong(1) should be(3)
 
   }
 
@@ -195,21 +195,21 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
       .where(col("batchid") === "1007" and col("userid") === "user017")
       .collect()
 
-    assert(data1.head.getInt(0) == 65)
+    data1.head.getInt(0) should be(65)
 
     val data2 = reportDF
       .select("course_completion")
       .where(col("batchid") === "1009" and col("userid") === "user019")
       .collect()
 
-    assert(data2.head.get(0) == 0)
+    data2.head.get(0)should be(0)
 
     val districtName = reportDF
       .select("district_name")
       .where(col("batchid") === "1006" and col("userid") === "user026")
       .collect()
 
-    assert(districtName.head.get(0) == "GULBARGA")
+    districtName.head.get(0) should be("GULBARGA")
   }
 
   it should "should round course progress to 100 when it is greater than 100" in {
@@ -248,14 +248,14 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
       .where(col("batchid") === "1006" and col("userid") === "user005")
       .collect()
 
-    assert(data1.head.getInt(0) == 100)
+    data1.head.getInt(0)should be(100)
 
     val data2 = reportDF
       .select("course_completion")
       .where(col("batchid") === "1005" and col("userid") === "user004")
       .collect()
 
-    assert(data2.head.getInt(0) == 100)
+    data2.head.getInt(0) should be(100)
   }
 
   it should "[Issue SB-12141] report should have 1 record for users mapped to two organisation (root and suborg)" in {
@@ -294,7 +294,7 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
       .where(col("batchid") === "1003" and col("userid") === "user013")
       .count()
 
-    assert(data1 == 1)
+    data1 should be(1)
   }
 
   it should "[Issue SB-13080] report should have externalid,orgname, block_name, completedOn fields" in {
@@ -328,17 +328,17 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
       .returning(externalIdentityDF)
 
     val reportDF = CourseMetricsJob.prepareReport(spark, reporterMock.loadData)
-    assert(reportDF.columns.contains("userid").equals(true))
-    assert(reportDF.columns.contains("completedon").equals(true))
-    assert(reportDF.columns.contains("externalid").equals(true))
-    assert(reportDF.columns.contains("block_name").equals(true))
+    reportDF.columns.contains("userid") should be(true)
+    reportDF.columns.contains("completedon") should be(true)
+    reportDF.columns.contains("externalid") should be(true)
+    reportDF.columns.contains("block_name")should be(true)
     // Externalid must not be null for user010, user030
     val user10DF = reportDF.filter(reportDF.col("userid") === "user010")
     val is10DFPresent = user10DF.select("externalid").collect().map(_ (0)).toList.contains(null)
     val user030DF = reportDF.filter(reportDF.col("userid") === "user030")
     val is30DFPresent = user030DF.select("externalid").collect().map(_ (0)).toList.contains(null)
-    assert(is10DFPresent === false)
-    assert(is30DFPresent === false)
+    is10DFPresent should be(false)
+    is30DFPresent should be(false)
   }
 
   it should "[Issue SB-13080] report should validate the block_name for the locationids " in {
@@ -372,7 +372,7 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
 
     val reportDF = CourseMetricsJob.prepareReport(spark, reporterMock.loadData)
     val result = reportDF.filter(reportDF("userid") === "user030" && reportDF("block_name") === "TUMKUR").count()
-    assert(result === 1)
+    result should be(1)
   }
 
 
@@ -407,7 +407,7 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
 
     val reportDF = CourseMetricsJob.prepareReport(spark, reporterMock.loadData)
     val result1 = reportDF.filter(reportDF("userid") === "user021")
-    assert(result1.groupBy(col("userid")).count().count() == 1)
+    result1.groupBy(col("userid")).count().count() should be(1)
   }
 
   it should "[Issue SB-14781] When User in multiple organisation then result should enclosed with square bracket " in {
@@ -441,12 +441,12 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
 
     val reportDF = CourseMetricsJob.prepareReport(spark, reporterMock.loadData)
     val result = reportDF.filter(reportDF("userid") === "user021")
-    assert(result.groupBy(col("userid")).count().count() == 1)
+    result.groupBy(col("userid")).count().count() should be(1)
 
     val school_name1 = result.select("schoolname_resolved").collect().map(_ (0)).toList.head.toString
     val regex = "\\[([^\\]]*)\\]".r
     val value = regex.findFirstIn(school_name1)
-    assert(value.isEmpty === false)
+    value.isEmpty should be(false)
   }
 
   it should "[Issue SB-14781] When User in not in multiple organisation then result should not enclosed with square bracket " in {
@@ -480,12 +480,12 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
 
     val reportDF = CourseMetricsJob.prepareReport(spark, reporterMock.loadData)
     val result = reportDF.filter(reportDF("userid") === "user007")
-    assert(result.groupBy(col("userid")).count().count() == 1)
+    result.groupBy(col("userid")).count().count() should be(1)
 
     val school_name1 = result.select("schoolname_resolved").collect().map(_ (0)).toList.head.toString
     val regex = "\\[([^\\]]*)\\]".r
     val value = regex.findFirstIn(school_name1)
-    assert(value.isEmpty === true)
+    value.isEmpty should be(true)
   }
 
   it should "Should able to create a local directory to rename the reports" in {
@@ -500,8 +500,8 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
     val out = new File(renamedDir)
     try {
       CourseMetricsJob.renameReport(tempDir, renamedDir);
-//      assert(out.exists() === true)
-//      assert(temp.exists() === true)
+//      out.exists() === true)
+//      temp.exists() === true)
     } catch {
       case ex: Exception => println("Error" + ex)
     }
@@ -517,7 +517,7 @@ class TestCourseMetricsJob extends BaseReportSpec with MockFactory {
     try {
       CourseMetricsJob.renameReport(tempDir, renamedDir);
     } catch {
-      case ex: Exception => assert(ex === null)
+      case ex: Exception => ex should be(null)
     }
 
   }

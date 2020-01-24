@@ -13,47 +13,47 @@ import org.ekstep.analytics.framework.FrameworkContext
 
 class TestStateAdminGeoReportJob extends SparkSpec(null) with MockFactory {
 
-  implicit var spark: SparkSession = _
-  var map: Map[String, String] = _
-  var shadowUserDF: DataFrame = _
-  var orgDF: DataFrame = _
-  var reporterMock: BaseReportsJob = mock[BaseReportsJob]
-  val sunbirdKeyspace = "sunbird"
+ implicit var spark: SparkSession = _
+ var map: Map[String, String] = _
+ var shadowUserDF: DataFrame = _
+ var orgDF: DataFrame = _
+ var reporterMock: BaseReportsJob = mock[BaseReportsJob]
+ val sunbirdKeyspace = "sunbird"
 
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    spark = getSparkSession()
-    EmbeddedCassandra.loadData("src/test/resources/reports/reports_test_data.cql") // Load test data in embedded cassandra server
-  }
+ override def beforeAll(): Unit = {
+   super.beforeAll()
+   spark = getSparkSession()
+   EmbeddedCassandra.loadData("src/test/resources/reports/reports_test_data.cql") // Load test data in embedded cassandra server
+ }
 
-  "StateAdminGeoReportJob" should "generate reports" in {
-    implicit val fc = new FrameworkContext()
-    val tempDir = AppConf.getConfig("admin.metrics.temp.dir")
-    val reportDF = StateAdminGeoReportJob.generateGeoReport()(spark, fc)
-    assert(reportDF.count() === 6)
-    //for geo report we expect these columns
-    assert(reportDF.columns.contains("index") === true)
-    assert(reportDF.columns.contains("School id") === true)
-    assert(reportDF.columns.contains("School name") === true)
-    assert(reportDF.columns.contains("District id") === true)
-    assert(reportDF.columns.contains("District name") === true)
-    assert(reportDF.columns.contains("Block id") === true)
-    assert(reportDF.columns.contains("Block name") === true)
-    assert(reportDF.columns.contains("slug") === true)
-    assert(reportDF.columns.contains("externalid") === true)
-    val apslug = reportDF.where(col("slug") === "ApSlug")
-    val school_name = apslug.select("School name").collect().map(_ (0)).toList
-    assert(school_name(0) === "MPPS SIMHACHALNAGAR")
-    assert(school_name(1) === "Another school")
-    assert(reportDF.select("District id").distinct().count == 4)
-    //checking reports were created under slug folder
-    val slugName = apslug.select("slug").collect().map(_ (0)).toList
-    val apslugDirPath = tempDir+"/renamed/"+slugName(0)+"/"
-    val geoDetail = new File(apslugDirPath+"geo-detail.csv")
-    val geoSummary = new File(apslugDirPath+"geo-summary.json")
-    val geoSummaryDistrict = new File(apslugDirPath+"geo-summary-district.json")
-    assert(geoDetail.exists() === true)
-    assert(geoSummary.exists() === true)
-    assert(geoSummaryDistrict.exists() === true)
-  }
+ "StateAdminGeoReportJob" should "generate reports" in {
+   implicit val fc = new FrameworkContext()
+   val tempDir = AppConf.getConfig("admin.metrics.temp.dir")
+   val reportDF = StateAdminGeoReportJob.generateGeoReport()(spark, fc)
+   reportDF.count() should be(6)
+   //for geo report we expect these columns
+   reportDF.columns.contains("index") should be(true)
+   reportDF.columns.contains("School id") should be(true)
+   reportDF.columns.contains("School name") should be(true)
+   reportDF.columns.contains("District id") should be(true)
+   reportDF.columns.contains("District name") should be(true)
+   reportDF.columns.contains("Block id") should be(true)
+   reportDF.columns.contains("Block name") should be(true)
+   reportDF.columns.contains("slug") should be(true)
+   reportDF.columns.contains("externalid") should be(true)
+   val apslug = reportDF.where(col("slug") === "ApSlug")
+   val school_name = apslug.select("School name").collect().map(_ (0)).toList
+   school_name(0) should be("MPPS SIMHACHALNAGAR")
+   school_name(1) should be("Another school")
+   reportDF.select("District id").distinct().count should be(4)
+   //checking reports were created under slug folder
+   val slugName = apslug.select("slug").collect().map(_ (0)).toList
+   val apslugDirPath = tempDir+"/renamed/"+slugName(0)+"/"
+   val geoDetail = new File(apslugDirPath+"geo-detail.csv")
+   val geoSummary = new File(apslugDirPath+"geo-summary.json")
+   val geoSummaryDistrict = new File(apslugDirPath+"geo-summary-district.json")
+   geoDetail.exists() should be(true)
+   geoSummary.exists() should be(true)
+   geoSummaryDistrict.exists() should be(true)
+ }
 }
